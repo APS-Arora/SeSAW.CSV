@@ -3,15 +3,15 @@
 #include <Servo.h>
 
 byte leftThrusterPin = 2;
-byte rightThrusterPin = 12;
+byte rightThrusterPin = 12; 
 Servo leftThruster;
 Servo rightThruster;
 
 ros::NodeHandle nh;
 
 void runThrusters( const sesaw_msgs::ThrusterCommand& thrust_msg){
-	leftThruster.writeMicroseconds(constrain(thrust_msg.leftThrust+1500,1100,1900));
-  rightThruster.writeMicroseconds(constrain(thrust_msg.rightThrust+1500,1100,1900));
+	leftThruster.writeMicroseconds(constrain((thrust_msg.leftThrust)>=0?(thrust_msg.leftThrust+1525):(thrust_msg.leftThrust+1475),1100,1900));
+  rightThruster.writeMicroseconds(constrain((thrust_msg.rightThrust)>=0?(thrust_msg.rightThrust+1525):(thrust_msg.rightThrust+1475),1100,1900));
 }
 ros::Subscriber<sesaw_msgs::ThrusterCommand> thrust_sub("/sesaw/control/Thrust", &runThrusters );
 
