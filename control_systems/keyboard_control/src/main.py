@@ -6,6 +6,7 @@ from Tkinter import *
 import rospy
 from std_msgs.msg import String
 from sesaw_msgs.msg import ThrusterCommand
+from sesaw_msgs.srv import CollectCommand
 
 rospy.init_node('keyboard_control_vehicle_node', anonymous=True)
 
@@ -36,7 +37,7 @@ def editGui(data):
 # s - backward
 # d - right
 
-string_dict = {0 : "left", 1 : "right", 2 : "backward", 3 : "forward", 4 : "STOP"}
+string_dict = {0 : "left", 1 : "right", 2 : "backward", 3 : "forward", 4 : "STOP", 5 : "collect"}
 
 def create_callbacks(arg):
 
@@ -88,15 +89,25 @@ def create_callbacks(arg):
             present6.leftThrust = 0.
             present6.rightThrust = 0.
 
-        THRUSTER_VALUES_CHANGED = True
+        if arg == 5:
 
-        print "Previous values: "
-        print previous6
+            try:
+                print "Trying to collect garbage."
+                collectGarbage()
+            except rospy.ServiceException, e:
+                print "Garbage Collection Service call failed: %s"%e
+            else:
+                print "Garbage Collected Successfully"
+        else:
+            THRUSTER_VALUES_CHANGED = True
 
-        print "Present values: "
-        print present6
+            print "Previous values: "
+            print previous6
 
-        pub6.publish(present6)
+            print "Present values: "
+            print present6
+
+            pub6.publish(present6)
 
     return callback
 
@@ -115,6 +126,9 @@ forward.grid(row=0,column=1)
 stop = Button(frame, text="STOP (Space)", bg='red', command=create_callbacks(4))
 stop.grid(row=1,column=3)
 
+collect = Button(frame, text="Collect (C)", bg='green', command=create_callbacks(5))
+collect.grid(row=2,column=3)
+
 l1 = Label(frame, text="Force Values")
 l1.grid(row=0, column=4)
 
@@ -128,10 +142,12 @@ root.bind("s", create_callbacks(2))
 root.bind("w", create_callbacks(3))
 root.bind("p",create_callbacks(4))
 root.bind("<space>", create_callbacks(4))
+root.bind("c",create_callbacks(5))
 
 frame.pack()
 
 # rospy.init_node('keyboard_control_vehicle_node', anonymous=True)
+collectGarbage = rospy.ServiceProxy('/sesaw/actuators/Collect', CollectCommand)
 rospy.Subscriber("/sesaw/control/Thrust", ThrusterCommand, editGui)
 pub6 = rospy.Publisher("/sesaw/control/Thrust", ThrusterCommand, queue_size = 10)
 
